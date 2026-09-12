@@ -1,0 +1,143 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net - Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidExperience(data) {
+      return data.keys().hasAll(['id', 'slug', 'ownerId', 'senderName', 'recipientName', 'title', 'theme', 'active', 'createdAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.slug is string && data.slug.size() <= 128 &&
+        data.ownerId is string && data.ownerId.size() <= 128 &&
+        data.senderName is string && data.senderName.size() <= 128 &&
+        data.recipientName is string && data.recipientName.size() <= 128 &&
+        data.title is string && data.title.size() <= 256 &&
+        data.theme is string && data.theme.size() <= 64 &&
+        data.active is bool &&
+        data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidResponse(data) {
+      return data.keys().hasAll(['id', 'experienceId', 'sessionId', 'recipientName', 'startedAt', 'completedAt', 'deviceCategory']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.experienceId is string && data.experienceId.size() <= 128 &&
+        data.sessionId is string && data.sessionId.size() <= 128 &&
+        data.recipientName is string && data.recipientName.size() <= 128 &&
+        data.startedAt is string && data.startedAt.size() <= 64 &&
+        data.completedAt is string && data.completedAt.size() <= 64 &&
+        data.deviceCategory is string && data.deviceCategory.size() <= 32 &&
+        (!('ownerId' in data) || (data.ownerId is string && data.ownerId.size() <= 128));
+    }
+
+    function isValidSession(data) {
+      return data.keys().hasAll(['id', 'sessionId', 'experienceId', 'recipientName', 'theme', 'updatedAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.sessionId is string && data.sessionId.size() <= 128 &&
+        data.experienceId is string && data.experienceId.size() <= 128 &&
+        data.recipientName is string && data.recipientName.size() <= 128 &&
+        data.theme is string && data.theme.size() <= 64 &&
+        data.updatedAt is string && data.updatedAt.size() <= 64;
+    }
+
+    // Experiences Collection
+    match /experiences/{experienceId} {
+      allow get: if isValidId(experienceId) && (resource.data.active == true || isOwner(resource.data.ownerId));
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() &&
+        isValidId(experienceId) &&
+        incoming().ownerId == request.auth.uid &&
+        isValidExperience(incoming());
+      allow update: if isOwner(resource.data.ownerId) &&
+        incoming().ownerId == existing().ownerId &&
+        isValidExperience(incoming());
+      allow delete: if isOwner(resource.data.ownerId);
+    }
+
+    // Responses Collection
+    match /responses/{responseId} {
+      allow create: if isValidId(responseId) &&
+        isValidResponse(incoming());
+      allow get: if isValidId(responseId) &&
+        isSignedIn() &&
+        (resource.data.ownerId == request.auth.uid ||
+         (resource.data.experienceId != null &&
+          exists(/databases/$(database)/documents/experiences/$(resource.data.experienceId)) &&
+          get(/databases/$(database)/documents/experiences/$(resource.data.experienceId)).data.ownerId == request.auth.uid));
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow update: if false; // Immutable
+      allow delete: if isSignedIn() &&
+        (resource.data.ownerId == request.auth.uid ||
+         (resource.data.experienceId != null &&
+          exists(/databases/$(database)/documents/experiences/$(resource.data.experienceId)) &&
+          get(/databases/$(database)/documents/experiences/$(resource.data.experienceId)).data.ownerId == request.auth.uid));
+    }
+
+    // Sessions Collection
+    match /sessions/{sessionId} {
+      allow create, update: if isValidId(sessionId) &&
+        isValidSession(incoming());
+      allow get: if isValidId(sessionId);
+      allow list: if isSignedIn();
+      allow delete: if isSignedIn() &&
+        (resource.data.experienceId != null &&
+         exists(/databases/$(database)/documents/experiences/$(resource.data.experienceId)) &&
+         get(/databases/$(database)/documents/experiences/$(resource.data.experienceId)).data.ownerId == request.auth.uid);
+    }
+
+    // Users Collection (Creator Profile)
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow create, update: if isSignedIn() && request.auth.uid == userId;
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+      allow list: if false; // Enumeration forbidden
+    }
+
+    // Connection test document probe for health checks
+    match /test/{testId} {
+      allow get: if true;
+    }
+
+    // Experience Questions Collection (isolated snapshots)
+    match /experience_questions/{questionInstanceId} {
+      allow get: if isValidId(questionInstanceId) &&
+        (
+          get(/databases/$(database)/documents/experiences/$(resource.data.experienceId)).data.active == true ||
+          (isSignedIn() && get(/databases/$(database)/documents/experiences/$(resource.data.experienceId)).data.ownerId == request.auth.uid)
+        );
+      allow list: if isValidId(request.query.experienceId) &&
+        (
+          get(/databases/$(database)/documents/experiences/$(request.query.experienceId)).data.active == true ||
+          (isSignedIn() && get(/databases/$(database)/documents/experiences/$(request.query.experienceId)).data.ownerId == request.auth.uid)
+        );
+      allow create, update: if isSignedIn() &&
+        isValidId(questionInstanceId) &&
+        get(/databases/$(database)/documents/experiences/$(incoming().experienceId)).data.ownerId == request.auth.uid;
+      allow delete: if isSignedIn() &&
+        isValidId(questionInstanceId) &&
+        get(/databases/$(database)/documents/experiences/$(resource.data.experienceId)).data.ownerId == request.auth.uid;
+    }
+  }
+}

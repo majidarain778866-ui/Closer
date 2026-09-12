@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "Experience": {
+      "title": "Experience",
+      "description": "An intimate romantic question experience created by a sender for a recipient.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "slug": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "senderName": { "type": "string", "maxLength": 128 },
+        "recipientName": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "customGreeting": { "type": "string", "maxLength": 1000 },
+        "personalNote": { "type": "string", "maxLength": 1000 },
+        "theme": { "type": "string", "maxLength": 64 },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "viewCount": { "type": "number" }
+      },
+      "required": ["id", "slug", "ownerId", "senderName", "recipientName", "title", "theme", "active", "createdAt"]
+    },
+    "Response": {
+      "title": "Response",
+      "description": "The answers and completion metadata provided by an experience recipient.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "experienceId": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "sessionId": { "type": "string", "maxLength": 128 },
+        "recipientName": { "type": "string", "maxLength": 128 },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "deviceCategory": { "type": "string", "maxLength": 32 },
+        "notified": { "type": "boolean" }
+      },
+      "required": ["id", "experienceId", "sessionId", "recipientName", "startedAt", "completedAt", "deviceCategory"]
+    },
+    "Session": {
+      "title": "Session",
+      "description": "An active recipient session tracking profile setup and connection progress.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "sessionId": { "type": "string", "maxLength": 128 },
+        "experienceId": { "type": "string", "maxLength": 128 },
+        "recipientName": { "type": "string", "maxLength": 128 },
+        "nickname": { "type": "string", "maxLength": 128 },
+        "theme": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "sessionId", "experienceId", "recipientName", "theme", "updatedAt"]
+    },
+    "ExperienceQuestion": {
+      "title": "ExperienceQuestion",
+      "description": "An isolated instance-level question snapshot configured specifically for an experience.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "experienceId": { "type": "string", "maxLength": 128 },
+        "sourceTemplateId": { "type": "string", "maxLength": 128 },
+        "text": { "type": "string", "maxLength": 500 },
+        "category": { "type": "string", "maxLength": 64 },
+        "type": { "type": "string", "maxLength": 64 },
+        "visualScene": { "type": "string", "maxLength": 64 },
+        "enabled": { "type": "boolean" },
+        "required": { "type": "boolean" }
+      },
+      "required": ["id", "experienceId", "text", "category", "type", "visualScene"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Authenticated creator profile and account metadata.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "format": "email", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email"]
+    }
+  },
+  "firestore": {
+    "/experiences/{experienceId}": {
+      "schema": "Experience",
+      "description": "Collection of shared connection experiences created by users."
+    },
+    "/responses/{responseId}": {
+      "schema": "Response",
+      "description": "Responses submitted by recipients answering connection questions."
+    },
+    "/sessions/{sessionId}": {
+      "schema": "Session",
+      "description": "Active recipient connection sessions with profile preferences."
+    },
+    "/experience_questions/{questionInstanceId}": {
+      "schema": "ExperienceQuestion",
+      "description": "Customized question snapshots belonging to specific experiences."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Creator user profile and configuration records."
+    }
+  }
+}

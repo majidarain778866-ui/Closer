@@ -1,0 +1,315 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-deepest: #050407;
+  --color-bg-primary: #0A0709;
+  --color-dark-red: #21070B;
+  --color-deep-crimson: #3A0B12;
+  --color-primary-red: #8F1020;
+  --color-bright-romantic-red: #D61F3A;
+  --color-accent: #FF3657;
+  --color-soft-rose: #FF6B7F;
+  --color-text-primary: #F8F2F3;
+  --color-text-secondary: #B8AEB1;
+  --color-text-muted: #726A6E;
+  --color-glass: rgba(255, 35, 65, 0.06);
+  --color-glass-border: rgba(255, 70, 95, 0.18);
+  --color-glow: rgba(255, 24, 55, 0.22);
+}
+
+@layer base {
+  :root {
+    --font-serif: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+    /* Closer Luxury Romantic Color Palette Tokens */
+    --bg-deepest: #050407;
+    --bg-primary: #0A0709;
+    --dark-red: #21070B;
+    --deep-crimson: #3A0B12;
+    --primary-red: #8F1020;
+    --bright-romantic-red: #D61F3A;
+    --accent: #FF3657;
+    --soft-rose: #FF6B7F;
+    --text-primary: #F8F2F3;
+    --text-secondary: #B8AEB1;
+    --text-muted: #726A6E;
+    --glass: rgba(255, 35, 65, 0.06);
+    --glass-border: rgba(255, 70, 95, 0.18);
+    --glow: rgba(255, 24, 55, 0.22);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #050407;
+    color: #F8F2F3;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, .font-romantic {
+    font-family: var(--font-serif);
+  }
+}
+
+/* Custom romantic glow & glass utilities */
+.glass-panel {
+  background: rgba(33, 7, 11, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 70, 95, 0.18);
+  box-shadow: 0 25px 50px -12px rgba(5, 4, 7, 0.9), 0 0 40px -10px rgba(255, 24, 55, 0.22);
+}
+
+.glass-panel-subtle {
+  background: rgba(255, 35, 65, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 70, 95, 0.18);
+}
+
+.glass-pill {
+  background: rgba(255, 35, 65, 0.06);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 70, 95, 0.18);
+}
+
+.glow-rose {
+  box-shadow: 0 0 35px -5px rgba(255, 24, 55, 0.25);
+}
+
+.glow-accent {
+  box-shadow: 0 0 35px -5px rgba(255, 54, 87, 0.35);
+}
+
+.glow-violet {
+  box-shadow: 0 0 35px -5px rgba(168, 85, 247, 0.35);
+}
+
+.glow-gold {
+  box-shadow: 0 0 30px -5px rgba(245, 158, 11, 0.25);
+}
+
+/* Keyframes for evasive shake */
+@keyframes evasiveShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px) rotate(-2deg); }
+  40% { transform: translateX(8px) rotate(2deg); }
+  60% { transform: translateX(-6px) rotate(-1deg); }
+  80% { transform: translateX(4px) rotate(1deg); }
+}
+
+.animate-evasive-shake {
+  animation: evasiveShake 0.45s ease-in-out;
+}
+
+@keyframes softFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1.5deg); }
+}
+
+.animate-soft-float {
+  animation: softFloat 6s ease-in-out infinite;
+}
+
+@keyframes subtlePulseGlow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.08); }
+}
+
+.animate-pulse-glow {
+  animation: subtlePulseGlow 8s ease-in-out infinite;
+}
+
+/* Shimmer loading animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(244, 63, 94, 0.14) 50%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite ease-in-out;
+}
+
+.animate-shimmer-subtle {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.2s infinite ease-in-out;
+}
+
+/* Floating Heart Atmosphere Animation */
+@keyframes floatHeart {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.35) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.92;
+    transform: translate3d(var(--drift-x-1, 8px), -15vh, 0) scale(1) rotate(var(--rot-1, 8deg));
+  }
+  45% {
+    transform: translate3d(var(--drift-x-2, -14px), -48vh, 0) scale(1.06) rotate(var(--rot-2, -10deg));
+  }
+  80% {
+    opacity: 0.7;
+    transform: translate3d(var(--drift-x-3, 10px), -82vh, 0) scale(0.95) rotate(var(--rot-3, 6deg));
+  }
+  100% {
+    transform: translate3d(var(--drift-x-4, -6px), -115vh, 0) scale(0.75) rotate(var(--rot-4, -8deg));
+    opacity: 0;
+  }
+}
+
+.animate-floating-heart {
+  animation: floatHeart var(--float-duration, 5.5s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+}
+
+/* Cinematic Card Enter Animation */
+@keyframes cardEnter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.985);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+.animate-card-enter {
+  animation: cardEnter 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity, filter;
+}
+
+/* Cinematic Stage & Section Transitions */
+@keyframes cinematicEnter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0) scale(0.975);
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes cinematicExit {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -18px, 0) scale(0.975);
+    filter: blur(10px);
+  }
+}
+
+@keyframes cinematicLightSweep {
+  0% {
+    transform: translateX(-150%);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(250%);
+    opacity: 0;
+  }
+}
+
+@keyframes cinematicPulseAura {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 0.62;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes cinematicSoftCrossfade {
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.cinematic-stage-enter {
+  animation: cinematicEnter 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity, filter;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.cinematic-stage-exit {
+  animation: cinematicExit 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity, filter;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.cinematic-light-sweep {
+  animation: cinematicLightSweep 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+}
+
+.cinematic-pulse-aura {
+  animation: cinematicPulseAura 7s ease-in-out infinite;
+}
+
+.cinematic-soft-crossfade {
+  animation: cinematicSoftCrossfade 0.45s ease-out forwards;
+}
+
+/* Cinematic Stage 3D Perspective & Hardware Acceleration */
+.cinematic-stage-container {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+/* Smooth transitions for theme and scene backdrop shifts */
+.cinematic-theme-transition {
+  transition: background 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.6s ease,
+              box-shadow 0.75s ease,
+              backdrop-filter 0.6s ease;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

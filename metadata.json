@@ -1,0 +1,6 @@
+{
+  "name": "Closer — A Private Little Experience",
+  "description": "Create a private, personalized experience and share it through one link.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
