@@ -97,7 +97,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
   allQuestions,
   theme = 'midnight-rose',
   recipientName = 'Ayesha',
-  senderName = 'Hamza',
+  senderName = 'Anonymous',
   isOpen,
   onClose,
   onSave,

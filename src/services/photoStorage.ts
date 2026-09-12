@@ -6,48 +6,9 @@
  * and 100% compatibility with Firebase Spark (No-Cost) plan.
  */
 
-// ImageKit configuration from environment variables or fallback to user credentials
-// Warning: In a client-side only static SPA deployment ($0/month) on Firebase Hosting without
-// paid serverless infrastructure, the signature is safely computed client-side via Web Crypto API.
-const IMAGEKIT_PUBLIC_KEY =
-  import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY || 'public_FQgvVcog63OCBig9GPBAKuVkT30=';
-const IMAGEKIT_URL_ENDPOINT =
-  import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/tcy9m1olt';
-const IMAGEKIT_PRIVATE_KEY =
-  import.meta.env.VITE_IMAGEKIT_PRIVATE_KEY || 'private_0MrRn80ngDXUDABn3SD0mX2JkOU=';
+// ImageKit configuration from environment variables
+const IMAGEKIT_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY || '';
 const IMAGEKIT_UPLOAD_ENDPOINT = 'https://upload.imagekit.io/api/v1/files/upload';
-
-/**
- * Computes an HMAC-SHA1 authentication signature using the browser's native Web Crypto API (SubtleCrypto)
- * required for ImageKit client-side uploads.
- */
-async function generateImageKitAuth(privateKey: string): Promise<{
-  token: string;
-  expire: number;
-  signature: string;
-}> {
-  const token =
-    typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : Math.random().toString(36).substring(2) + Date.now().toString(36);
-  // Valid for 30 minutes (ImageKit allows up to 1 hour)
-  const expire = Math.floor(Date.now() / 1000) + 1800;
-
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(privateKey),
-    { name: 'HMAC', hash: 'SHA-1' },
-    false,
-    ['sign']
-  );
-
-  const signatureBuffer = await crypto.subtle.sign('HMAC', key, enc.encode(token + expire));
-  const hashArray = Array.from(new Uint8Array(signatureBuffer));
-  const signature = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-
-  return { token, expire, signature };
-}
 
 export interface ImageProcessingOptions {
   maxWidth?: number;
@@ -163,17 +124,6 @@ export async function uploadRecipientPhoto(
       formData.append('publicKey', IMAGEKIT_PUBLIC_KEY);
       formData.append('folder', '/closer_photos');
       formData.append('useUniqueFileName', 'true');
-
-      if (IMAGEKIT_PRIVATE_KEY) {
-        try {
-          const authParams = await generateImageKitAuth(IMAGEKIT_PRIVATE_KEY);
-          formData.append('token', authParams.token);
-          formData.append('expire', authParams.expire.toString());
-          formData.append('signature', authParams.signature);
-        } catch (authErr) {
-          console.warn('ImageKit auth signature generation notice:', authErr);
-        }
-      }
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4000);

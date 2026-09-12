@@ -49,8 +49,8 @@ export function sanitizeForFirestore<T>(data: T): T {
 
 const DEFAULT_USER: SenderUser = {
   userId: 'user-demo-1',
-  email: 'creator@closer.app',
-  name: 'Hamza',
+  email: 'majidarain778866@gmail.com',
+  name: 'Anonymous',
 };
 
 const INITIAL_EXPERIENCES: Experience[] = [
@@ -58,7 +58,7 @@ const INITIAL_EXPERIENCES: Experience[] = [
     id: 'exp-ayesha',
     slug: 'ayesha-special',
     ownerId: 'user-demo-1',
-    senderName: 'Hamza',
+    senderName: 'Anonymous',
     recipientName: 'Ayesha',
     title: 'A little conversation for Ayesha',
     customGreeting: 'Before you rush through your busy day… take two quiet minutes for this.',
@@ -73,7 +73,7 @@ const INITIAL_EXPERIENCES: Experience[] = [
     id: 'exp-alex',
     slug: 'alex-connection',
     ownerId: 'user-demo-1',
-    senderName: 'Hamza',
+    senderName: 'Anonymous',
     recipientName: 'Alex',
     title: 'Just between you and me',
     customGreeting: 'A few little secrets and late night questions...',

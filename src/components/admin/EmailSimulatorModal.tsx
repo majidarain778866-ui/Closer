@@ -104,7 +104,7 @@ export const EmailSimulatorModal: React.FC<EmailSimulatorModalProps> = ({
 
           <div className="space-y-3 text-xs sm:text-sm">
             <p className="text-white/90">
-              Hey Hamza,
+              Hey Anonymous,
             </p>
             <p className="text-rose-200 font-medium">
               <strong>{samplePayload.recipientName}</strong> just completed your private experience!

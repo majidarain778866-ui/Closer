@@ -54,16 +54,62 @@ class EmailService {
       }
     });
 
-    // Architecture ready for Resend / SendGrid / Firebase Trigger Email:
-    // e.g. await fetch('/api/send-email', { method: 'POST', body: JSON.stringify(payload) })
-    console.log('[EmailService] Transactional Email Prepared & Dispatched:', payload);
+    // 100% Free Direct Email Dispatch via FormSubmit.co
+    let emailDispatched = false;
+    const targetEmail = senderEmail || 'majidarain778866@gmail.com';
+
+    try {
+      const emailFields: Record<string, any> = {
+        _subject: `❤️ ${response.recipientName} completed your Closer experience!`,
+        _template: 'box',
+        _captcha: 'false',
+        'Recipient Name': response.recipientName,
+        'Experience': experienceTitle,
+        'Completion Time': new Date(response.completedAt).toLocaleString(),
+        'Device Type': response.deviceCategory,
+        'Location': response.location?.formatted || (response.location?.granted ? 'Shared' : 'Not shared'),
+      };
+
+      // Map question answers
+      Object.values(response.answers).forEach((ans, idx) => {
+        const key = `Question ${idx + 1} (${ans.questionText})`;
+        emailFields[key] = Array.isArray(ans.value) ? ans.value.join(', ') : ans.value;
+      });
+
+      // Map any private answers
+      if (response.privateAnswers) {
+        Object.values(response.privateAnswers).forEach((ans, idx) => {
+          const key = `[Private] ${ans.questionText}`;
+          emailFields[key] = Array.isArray(ans.value) ? ans.value.join(', ') : ans.value;
+        });
+      }
+
+      const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(targetEmail)}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(emailFields),
+      });
+
+      if (res.ok) {
+        emailDispatched = true;
+        console.info(`[EmailService] Real direct email notification sent to ${targetEmail}`);
+      }
+    } catch (dispatchErr) {
+      console.warn('[EmailService] Direct email dispatch note:', dispatchErr);
+    }
+
+    console.log('[EmailService] Transactional Email Payload:', payload);
 
     return {
       success: true,
-      simulated: true,
+      simulated: !emailDispatched,
       payload,
     };
   }
 }
 
 export const emailService = new EmailService();
+

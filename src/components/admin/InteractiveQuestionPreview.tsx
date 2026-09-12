@@ -16,7 +16,7 @@ export const InteractiveQuestionPreview: React.FC<InteractiveQuestionPreviewProp
   question,
   theme = 'midnight-rose',
   recipientName = 'Ayesha',
-  senderName = 'Hamza',
+  senderName = 'Anonymous',
 }) => {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [activeReward, setActiveReward] = useState<AnswerReward | null>(null);

@@ -93,7 +93,7 @@ export const ExperienceBuilder: React.FC<ExperienceBuilderProps> = ({
 
   // Step 1: Recipient Profile
   const [recipientName, setRecipientName] = useState(initialExperience?.recipientName || '');
-  const [senderName, setSenderName] = useState(initialExperience?.senderName || 'Hamza');
+  const [senderName, setSenderName] = useState(initialExperience?.senderName || 'Anonymous');
   const [nickname, setNickname] = useState('');
   const [lovelyName, setLovelyName] = useState('Sweetheart');
   const [photoUrl, setPhotoUrl] = useState('');
@@ -606,7 +606,7 @@ export const ExperienceBuilder: React.FC<ExperienceBuilderProps> = ({
                     type="text"
                     value={senderName}
                     onChange={(e) => setSenderName(e.target.value)}
-                    placeholder="e.g. Hamza"
+                    placeholder="e.g. Anonymous"
                     className="w-full py-2.5 px-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-rose-400/50"
                   />
                 </div>
@@ -1129,7 +1129,7 @@ export const ExperienceBuilder: React.FC<ExperienceBuilderProps> = ({
                     question={questions[previewQuestionIdx]}
                     theme={theme}
                     recipientName={recipientName || 'Ayesha'}
-                    senderName={senderName || 'Hamza'}
+                    senderName={senderName || 'Anonymous'}
                   />
                 </div>
               )}
@@ -1435,7 +1435,7 @@ export const ExperienceBuilder: React.FC<ExperienceBuilderProps> = ({
                 question={quickPreviewQuestion}
                 theme={theme}
                 recipientName={recipientName || 'Ayesha'}
-                senderName={senderName || 'Hamza'}
+                senderName={senderName || 'Anonymous'}
               />
             </div>
 
