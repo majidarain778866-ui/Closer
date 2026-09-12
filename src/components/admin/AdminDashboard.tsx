@@ -54,6 +54,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [emailPayload, setEmailPayload] = useState<EmailNotificationPayload | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [authUser, setAuthUser] = useState<User | null>(auth.currentUser);
+  const [guestCreator, setGuestCreator] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('closer_guest_creator') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [loginLoading, setLoginLoading] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -140,8 +147,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const totalViews = experiences.reduce((acc, curr) => acc + (curr.viewCount || 0), 0);
   const activeCount = experiences.filter((e) => e.active).length;
 
-  // Protected Creator Studio Gate - requires authentication
-  if (!authUser) {
+  // Protected Creator Studio Gate - allows Google Auth or Instant Anonymous Access
+  const isAuthorized = !!authUser || guestCreator;
+
+  if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-[#07060e] text-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
         {/* Ambient atmospheric glow */}
@@ -155,10 +164,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <h1 className="text-2xl sm:text-3xl font-serif text-white tracking-wide mb-2">
             Closer Creator Studio
           </h1>
-          <p className="text-xs sm:text-sm text-white/60 mb-8 leading-relaxed">
-            Sign in with your Google account to create and manage private connection experiences, customize questions, and view intimate responses securely.
+          <p className="text-xs sm:text-sm text-white/60 mb-6 leading-relaxed">
+            Create custom connection experiences, modify questions, and track all responses and email notifications.
           </p>
 
+          {/* Instant One-Click Access Button (Primary & Zero-Hassle) */}
+          <button
+            type="button"
+            onClick={() => {
+              setGuestCreator(true);
+              try {
+                localStorage.setItem('closer_guest_creator', 'true');
+              } catch {}
+            }}
+            className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-700 text-white font-semibold text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-rose-500/30 transition-all cursor-pointer mb-3"
+          >
+            <Sparkles className="w-4 h-4 text-white" />
+            <span>Enter as Anonymous Creator (Instant Access)</span>
+          </button>
+
+          <div className="relative my-4 flex items-center justify-center">
+            <div className="border-t border-white/10 w-full" />
+            <span className="bg-[#07060e] px-3 text-[10px] text-white/40 uppercase tracking-widest">or sign in</span>
+          </div>
+
+          {/* Optional Google Sign-In */}
           <button
             type="button"
             onClick={async () => {
@@ -167,15 +197,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               try {
                 await loginWithGoogle();
               } catch (err: any) {
-                if (err?.code !== 'auth/popup-closed-by-user') {
-                  setLoginError('Sign in could not be completed. Please try again.');
+                if (err?.code === 'auth/unauthorized-domain') {
+                  setLoginError('This Vercel domain needs to be added to Firebase Authorized Domains. In the meantime, simply click "Enter as Anonymous Creator" above for instant access!');
+                } else if (err?.code !== 'auth/popup-closed-by-user') {
+                  setLoginError('Google sign in encountered an issue. Please click "Enter as Anonymous Creator" above to use the Studio directly.');
                 }
               } finally {
                 setLoginLoading(false);
               }
             }}
             disabled={loginLoading}
-            className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-700 text-white font-medium text-sm flex items-center justify-center gap-3 shadow-xl shadow-rose-500/30 transition-all cursor-pointer disabled:opacity-50"
+            className="w-full py-3 px-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 font-medium text-xs sm:text-sm flex items-center justify-center gap-3 transition-all cursor-pointer disabled:opacity-50"
           >
             {loginLoading ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
@@ -188,12 +220,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </button>
 
           {loginError && (
-            <p className="text-xs text-rose-300 mt-3">{loginError}</p>
+            <div className="mt-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-200 text-xs text-left leading-relaxed">
+              {loginError}
+            </div>
           )}
 
           <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-center gap-2 text-[11px] text-white/40">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Protected by Firebase Authentication &amp; Firestore Security Rules</span>
+            <span>100% Free • Direct Email to majidarain778866@gmail.com</span>
           </div>
         </div>
       </div>
@@ -228,19 +262,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-medium">Firestore Active</span>
+              <span className="font-medium">Direct Alerts Active</span>
             </div>
 
             <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-white/5 border border-white/10">
               <div className="w-6 h-6 rounded-full bg-rose-500/30 text-rose-300 text-xs font-semibold flex items-center justify-center">
-                {authUser.displayName ? authUser.displayName.charAt(0).toUpperCase() : 'U'}
+                {authUser?.displayName
+                  ? authUser.displayName.charAt(0).toUpperCase()
+                  : currentUser.name.charAt(0).toUpperCase()}
               </div>
-              <span className="text-xs text-white/80 max-w-[120px] truncate hidden md:inline">
-                {authUser.displayName || authUser.email}
+              <span className="text-xs text-white/80 max-w-[140px] truncate hidden md:inline">
+                {authUser?.displayName || authUser?.email || currentUser.name || 'Anonymous'}
               </span>
               <button
                 type="button"
-                onClick={() => logoutUser()}
+                onClick={() => {
+                  setGuestCreator(false);
+                  try {
+                    localStorage.removeItem('closer_guest_creator');
+                  } catch {}
+                  logoutUser();
+                }}
                 className="text-xs text-rose-400 hover:text-rose-300 ml-1 cursor-pointer"
               >
                 Sign out
