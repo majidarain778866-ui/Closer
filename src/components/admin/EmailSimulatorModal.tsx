@@ -1,7 +1,24 @@
 import React, { useState } from 'react';
-import { EmailNotificationPayload } from '../../types';
+import { EmailNotificationPayload, ExperienceResponse } from '../../types';
 import { emailService } from '../../services/emailService';
-import { X, Mail, Check, Copy, Heart, Sparkles, Send, Flame, Shield, MapPin, Smartphone, Clock } from 'lucide-react';
+import { generateLuxuryEmailHtml } from '../../utils/generateLuxuryEmailHtml';
+import {
+  X,
+  Mail,
+  Check,
+  Copy,
+  Heart,
+  Sparkles,
+  Send,
+  Flame,
+  Shield,
+  MapPin,
+  Smartphone,
+  Clock,
+  ExternalLink,
+  Code,
+  Palette,
+} from 'lucide-react';
 
 interface EmailSimulatorModalProps {
   payload?: EmailNotificationPayload | null;
@@ -14,35 +31,117 @@ export const EmailSimulatorModal: React.FC<EmailSimulatorModalProps> = ({
   onClose,
 }) => {
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'card' | 'fields' | 'letter'>('card');
+  const [activeTab, setActiveTab] = useState<'html-live' | 'setup-guide' | 'clean-fields'>('html-live');
   const [sendingTest, setSendingTest] = useState(false);
   const [testSentSuccess, setTestSentSuccess] = useState(false);
 
-  // Fallback sample payload if none completed yet
-  const samplePayload: EmailNotificationPayload = payload || {
-    to: 'majidarain778866@gmail.com',
-    subject: '🌹 Closer Alert: Ayesha finished your experience! (Romantic ❤️)',
+  // Sample response to generate exact luxury HTML
+  const sampleResponse: ExperienceResponse = {
+    id: 'resp-ayesha-demo',
+    experienceId: 'exp-ayesha',
+    sessionId: 'sess-demo-vip',
     recipientName: 'Ayesha',
-    experienceTitle: 'A little conversation for Ayesha',
-    nickname: 'Jaan ❤️',
-    theme: 'Midnight Rose',
-    answersSummary: [
-      { question: 'What does your perfect evening look like?', answer: 'Sunset glow with soft music 🌅✨' },
-      { question: 'Okay… and what are we ordering?', answer: 'Artisan Cheesy Pizza & Cold Coffee 🍕☕' },
-      { question: 'What makes spending time with someone feel special to you?', answer: 'Feeling understood without explaining 🤍' },
-      { question: 'Be honest… what gets your attention first?', answer: 'Kind eyes and genuine smile 👀' },
-      { question: 'Where should our ideal first real hangout be?', answer: 'A cozy rooftop cafe with fairy lights ☕✨' },
-      { question: 'And at what hour does the magic feel right?', answer: 'Sunset / Twilight 🌇' },
-      { question: 'Late-night conversation and really good chemistry… tempting? 😏', answer: 'Very tempting YES ✨ (Dodged NO 2x)' },
-      { question: 'One last question… Would you like to make some beautiful memories together? ❤️', answer: 'YES, absolutely 100% ❤️ (Dodged NO 1x)' },
-    ],
+    recipientProfile: {
+      name: 'Ayesha',
+      nickname: 'Aysh',
+      lovelyName: 'Jaan ❤️',
+      selectedTheme: 'midnight-rose',
+    },
+    theme: 'midnight-rose',
+    vibe: 'Romantic',
+    startedAt: new Date(Date.now() - 195000).toISOString(),
     completedAt: new Date().toISOString(),
-    location: 'Lahore, Pakistan',
-    responseId: 'resp-ayesha-demo',
+    deviceCategory: 'mobile',
+    location: {
+      granted: true,
+      formatted: 'Lahore, Pakistan',
+    },
+    answers: {
+      'q1-evening': {
+        questionId: 'q1-evening',
+        questionText: 'What does your perfect evening look like?',
+        category: 'cute',
+        value: 'Sunset glow with soft music 🌅✨',
+        answeredAt: new Date().toISOString(),
+      },
+      'q2-food': {
+        questionId: 'q2-food',
+        questionText: 'Okay… and what are we ordering?',
+        category: 'food',
+        value: 'Artisan Cheesy Pizza & Cold Coffee 🍕☕',
+        answeredAt: new Date().toISOString(),
+      },
+      'q3-vibe': {
+        questionId: 'q3-vibe',
+        questionText: 'What makes spending time with someone feel special to you?',
+        category: 'deep',
+        value: 'Feeling understood without having to explain 🤍',
+        answeredAt: new Date().toISOString(),
+      },
+      'q4-attention': {
+        questionId: 'q4-attention',
+        questionText: 'Be honest… what gets your attention first?',
+        category: 'attraction',
+        value: 'Kind eyes and how you talk to me 👀✨',
+        answeredAt: new Date().toISOString(),
+      },
+      'q6-place': {
+        questionId: 'q6-place',
+        questionText: 'Where should our ideal first real hangout be?',
+        category: 'romantic',
+        value: 'A peaceful rooftop cafe with fairy lights ☕✨',
+        answeredAt: new Date().toISOString(),
+      },
+      'q7-time': {
+        questionId: 'q7-time',
+        questionText: 'And at what hour does the magic feel right?',
+        category: 'romantic',
+        value: 'Sunset / Twilight 🌇',
+        answeredAt: new Date().toISOString(),
+      },
+      'q8-tease': {
+        questionId: 'q8-tease',
+        questionText: 'Late-night conversation, dim lights, and really good chemistry… sounds tempting? 😏',
+        category: 'flirty',
+        value: 'Very tempting YES ✨',
+        evasionCount: 2,
+        answeredAt: new Date().toISOString(),
+      },
+      'q9-final': {
+        questionId: 'q9-final',
+        questionText: 'One last question… Would you like to make some beautiful memories together? ❤️',
+        category: 'final',
+        value: 'YES, absolutely 100% ❤️',
+        evasionCount: 1,
+        answeredAt: new Date().toISOString(),
+      },
+    },
+    privateAnswers: {
+      'secret-thought': {
+        questionId: 'secret-thought',
+        questionText: 'A secret thought you haven’t shared with anyone else yet:',
+        category: 'deep',
+        value: 'I smile every time your notification pops up on my phone 🙈🤍',
+        answeredAt: new Date().toISOString(),
+      },
+    },
+    personalitySnapshot: {
+      title: 'The Magnetic Dreamer ✨',
+      romanticSummary:
+        'A rare blend of playful banter and deep emotional warmth. Loves thoughtful gestures and effortless chemistry.',
+      dominantTags: ['romantic', 'deep', 'playful'],
+      traits: [
+        { icon: '🤍', label: 'Genuine Heart', note: 'Values emotional safety above everything' },
+        { icon: '✨', label: 'Playful Spark', note: 'Loves teasing back when comfortable' },
+        { icon: '🌹', label: 'Hopeless Romantic', note: 'Appreciates sunsets, quality time, and eye contact' },
+      ],
+    },
   };
 
-  const copyJson = () => {
-    navigator.clipboard.writeText(JSON.stringify(samplePayload, null, 2));
+  const luxuryEmailHtml = generateLuxuryEmailHtml(sampleResponse, 'majidarain778866@gmail.com');
+
+  const copyHtml = () => {
+    navigator.clipboard.writeText(luxuryEmailHtml);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -65,36 +164,32 @@ export const EmailSimulatorModal: React.FC<EmailSimulatorModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-md overflow-y-auto animate-fade-in"
     >
-      <div className="relative w-full max-w-2xl bg-[#0c0a16] border border-white/10 rounded-3xl p-6 sm:p-8 text-left shadow-2xl my-8 overflow-hidden">
+      <div className="relative w-full max-w-3xl bg-[#0a0814] border border-white/10 rounded-3xl p-5 sm:p-7 text-left shadow-2xl my-6 overflow-hidden">
         {/* Top glow */}
         <div
           aria-hidden="true"
-          className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-rose-500/20 blur-3xl pointer-events-none"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full bg-pink-500/15 blur-3xl pointer-events-none"
+          className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-rose-500/20 blur-3xl pointer-events-none"
         />
 
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-4 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
-              <Mail className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/25">
+              <Palette className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base sm:text-lg font-semibold text-white">
-                  Direct Email Notification System
+                  Luxury HTML Email Experience
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  100% FREE ACTIVE
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  DESIGN UPGRADED
                 </span>
               </div>
               <p className="text-xs text-white/60">
-                Delivers instant alerts directly to <strong className="text-rose-300">majidarain778866@gmail.com</strong>
+                Delivers to <strong className="text-rose-300">majidarain778866@gmail.com</strong>
               </p>
             </div>
           </div>
@@ -107,13 +202,13 @@ export const EmailSimulatorModal: React.FC<EmailSimulatorModalProps> = ({
           </button>
         </div>
 
-        {/* Live Test Trigger Banner */}
-        <div className="mt-4 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Quick Send Banner */}
+        <div className="mt-4 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="text-xs text-rose-200">
             <span className="font-semibold text-white flex items-center gap-1.5 mb-0.5">
-              <Flame className="w-3.5 h-3.5 text-rose-400" /> Send Live Verification Test
+              <Flame className="w-3.5 h-3.5 text-rose-400" /> Send Instant Live Email
             </span>
-            Click below to receive this exact formatted email in your Gmail right now.
+            Click to dispatch an instant test email directly to majidarain778866@gmail.com.
           </div>
           <button
             type="button"
@@ -124,12 +219,12 @@ export const EmailSimulatorModal: React.FC<EmailSimulatorModalProps> = ({
             {sendingTest ? (
               <>
                 <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Sending to Gmail...</span>
+                <span>Dispatching...</span>
               </>
             ) : (
               <>
                 <Send className="w-3.5 h-3.5" />
-                <span>Send Test Email Now</span>
+                <span>Send Test Email</span>
               </>
             )}
           </button>
@@ -139,8 +234,7 @@ export const EmailSimulatorModal: React.FC<EmailSimulatorModalProps> = ({
           <div className="mt-3 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 animate-fade-in">
             <Check className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>
-              <strong>Success!</strong> Test email dispatched to <strong>majidarain778866@gmail.com</strong>.
-              (If first time, check your inbox and click "Activate Form" once).
+              <strong>Delivered!</strong> Email sent to <strong>majidarain778866@gmail.com</strong>.
             </span>
           </div>
         )}
@@ -149,240 +243,154 @@ export const EmailSimulatorModal: React.FC<EmailSimulatorModalProps> = ({
         <div className="mt-4 flex gap-2 border-b border-white/10 pb-2">
           <button
             type="button"
-            onClick={() => setActiveTab('card')}
+            onClick={() => setActiveTab('html-live')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              activeTab === 'card'
+              activeTab === 'html-live'
                 ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/30'
                 : 'text-white/60 hover:text-white hover:bg-white/5'
             }`}
           >
-            Visual Email Layout
+            🎨 Visual Design Preview (Live HTML)
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('fields')}
+            onClick={() => setActiveTab('setup-guide')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              activeTab === 'fields'
+              activeTab === 'setup-guide'
                 ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/30'
                 : 'text-white/60 hover:text-white hover:bg-white/5'
             }`}
           >
-            Structured Data Fields
+            ⚡ 100% Free VIP Gmail Delivery (Resend)
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('letter')}
+            onClick={() => setActiveTab('clean-fields')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              activeTab === 'letter'
+              activeTab === 'clean-fields'
                 ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/30'
                 : 'text-white/60 hover:text-white hover:bg-white/5'
             }`}
           >
-            Narrative Dossier
+            📋 Clean Form Data
           </button>
         </div>
 
-        {/* Content Tabs */}
-        <div className="mt-4 max-h-[380px] overflow-y-auto pr-1 space-y-4 text-left">
-          {activeTab === 'card' && (
-            <div className="rounded-2xl bg-[#141022] border border-rose-500/20 p-5 sm:p-6 shadow-xl space-y-4">
-              {/* Email Client Header Preview */}
-              <div className="flex items-center justify-between pb-3 border-b border-white/10 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-rose-500/20 flex items-center justify-center">
-                    <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-500/30" />
-                  </div>
-                  <div>
-                    <span className="font-serif text-white font-semibold">Closer Notification</span>
-                    <span className="text-white/40 block text-[10px]">via FormSubmit Instant Relay</span>
-                  </div>
-                </div>
-                <span className="text-[11px] text-emerald-400 font-mono flex items-center gap-1">
-                  <Shield className="w-3 h-3" /> 100% Free
-                </span>
-              </div>
+        {/* Tab 1: LIVE RENDERED HTML EMAIL */}
+        {activeTab === 'html-live' && (
+          <div className="mt-4">
+            <div className="text-[11px] text-white/50 mb-2 flex items-center justify-between">
+              <span>This is the exact high-definition visual layout rendered for Gmail &amp; mobile clients:</span>
+              <button
+                type="button"
+                onClick={copyHtml}
+                className="text-rose-400 hover:text-white flex items-center gap-1 cursor-pointer"
+              >
+                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                <span>{copied ? 'HTML Copied!' : 'Copy Raw HTML'}</span>
+              </button>
+            </div>
+            <div className="w-full h-[440px] rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-[#06040a]">
+              <iframe
+                title="Visual Luxury Email Preview"
+                srcDoc={luxuryEmailHtml}
+                className="w-full h-full border-0"
+              />
+            </div>
+          </div>
+        )}
 
-              {/* Recipient Profile Hero Banner */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-rose-950/40 via-purple-950/30 to-pink-950/40 border border-rose-500/30 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-wider text-rose-300 font-semibold flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-rose-400" /> Recipient Match
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300">
-                    100% All Answered
-                  </span>
-                </div>
-                <h4 className="text-lg font-serif font-bold text-white">
-                  {samplePayload.recipientName} {samplePayload.nickname ? `("${samplePayload.nickname}")` : ''}
-                </h4>
-                <p className="text-xs text-white/70">
-                  Vibe: <strong className="text-rose-200">Romantic & Deep</strong> • Theme: <strong className="text-purple-200">{samplePayload.theme || 'Midnight Rose'}</strong>
-                </p>
-              </div>
+        {/* Tab 2: RESEND FREE SETUP GUIDE */}
+        {activeTab === 'setup-guide' && (
+          <div className="mt-4 p-5 rounded-2xl bg-[#120e20] border border-rose-500/30 space-y-4 text-xs">
+            <div className="flex items-center gap-2 text-rose-300 font-semibold text-sm">
+              <Sparkles className="w-4 h-4 text-rose-400" />
+              <span>How to deliver the full custom HTML directly into Gmail (100% Free):</span>
+            </div>
+            <p className="text-white/70 leading-relaxed">
+              FormSubmit restricts emails to plain gray tables. To deliver the <strong>stunning visual HTML design with dark mode, cards, fonts, and graphics</strong> shown in the preview tab, Vercel supports <strong>Resend</strong> (free 3,000 emails/month, zero credit card):
+            </p>
 
-              {/* Date & Chemistry Blueprint */}
-              <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-2 text-xs">
-                <div className="text-white/50 uppercase tracking-wider font-semibold text-[10px] flex items-center gap-1">
-                  <Flame className="w-3 h-3 text-rose-400" /> Date & Chemistry Blueprint
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="p-2 rounded-lg bg-white/5 border border-white/5">
-                    <span className="text-white/40 block text-[10px]">🍕 Food & Drinks</span>
-                    <span className="text-white font-medium">{samplePayload.answersSummary[1]?.answer}</span>
-                  </div>
-                  <div className="p-2 rounded-lg bg-white/5 border border-white/5">
-                    <span className="text-white/40 block text-[10px]">📍 Dream Meeting Spot</span>
-                    <span className="text-white font-medium">{samplePayload.answersSummary[4]?.answer}</span>
-                  </div>
-                  <div className="p-2 rounded-lg bg-white/5 border border-white/5">
-                    <span className="text-white/40 block text-[10px]">🌇 Best Hour</span>
-                    <span className="text-white font-medium">{samplePayload.answersSummary[5]?.answer}</span>
-                  </div>
-                  <div className="p-2 rounded-lg bg-white/5 border border-white/5">
-                    <span className="text-white/40 block text-[10px]">❤️ Final Verdict</span>
-                    <span className="text-rose-400 font-bold">{samplePayload.answersSummary[samplePayload.answersSummary.length - 1]?.answer}</span>
-                  </div>
+            <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-rose-500/30 text-rose-300 font-bold flex items-center justify-center shrink-0">1</span>
+                <div>
+                  <strong className="text-white">Sign up on Resend (Free):</strong>
+                  <p className="text-white/60 text-[11px] mt-0.5">
+                    Visit <a href="https://resend.com" target="_blank" rel="noreferrer" className="text-rose-400 underline">resend.com</a> and click "Start with Google" (takes 10 seconds).
+                  </p>
                 </div>
               </div>
 
-              {/* Questions Breakdown List */}
-              <div className="space-y-2">
-                <span className="text-white/50 uppercase tracking-wider font-semibold text-[10px] block">
-                  Question-by-Question Breakdown
-                </span>
-                {samplePayload.answersSummary.map((item, idx) => (
-                  <div key={idx} className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs flex flex-col gap-0.5">
-                    <span className="text-white/50 font-medium">
-                      Q{idx + 1}: {item.question}
-                    </span>
-                    <span className="text-rose-200 font-semibold">{item.answer}</span>
-                  </div>
-                ))}
+              <div className="flex items-start gap-2 pt-2 border-t border-white/5">
+                <span className="w-5 h-5 rounded-full bg-rose-500/30 text-rose-300 font-bold flex items-center justify-center shrink-0">2</span>
+                <div>
+                  <strong className="text-white">Copy API Key:</strong>
+                  <p className="text-white/60 text-[11px] mt-0.5">
+                    Click <strong>API Keys</strong> &rarr; <strong>Create API Key</strong> &rarr; copy the key (starts with <code className="text-rose-300">re_...</code>).
+                  </p>
+                </div>
               </div>
 
-              {/* Next Move Callout */}
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-rose-500/10 border border-amber-500/20 text-xs">
-                <span className="text-amber-300 font-semibold block mb-1">💡 Suggested Text To Send:</span>
-                <p className="text-white/80 italic font-serif">
-                  “So {samplePayload.nickname || samplePayload.recipientName}… heard you're craving artisan pizza at sunset. Shall we make it happen? 😉🌹”
-                </p>
-              </div>
-
-              {/* Metadata row */}
-              <div className="flex flex-wrap items-center justify-between text-[11px] text-white/40 pt-2 border-t border-white/10">
-                <span className="flex items-center gap-1">
-                  <Smartphone className="w-3 h-3" /> Mobile Device
-                </span>
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> {samplePayload.location || 'Lahore, Pakistan'}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> Completed in 3 mins
-                </span>
+              <div className="flex items-start gap-2 pt-2 border-t border-white/5">
+                <span className="w-5 h-5 rounded-full bg-rose-500/30 text-rose-300 font-bold flex items-center justify-center shrink-0">3</span>
+                <div>
+                  <strong className="text-white">Paste into Vercel Project Settings:</strong>
+                  <p className="text-white/60 text-[11px] mt-0.5">
+                    In your Vercel project &rarr; <strong>Settings</strong> &rarr; <strong>Environment Variables</strong> &rarr; add:
+                    <br />
+                    Key: <code className="text-emerald-400">RESEND_API_KEY</code> &nbsp;|&nbsp; Value: <code className="text-rose-300">re_...</code>
+                  </p>
+                </div>
               </div>
             </div>
-          )}
 
-          {activeTab === 'fields' && (
-            <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-2 font-mono text-xs">
-              <div className="text-white/40 mb-2 font-sans text-xs">
-                FormSubmit organizes these fields into clear cards in your Gmail:
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-rose-400">_subject:</span>
-                <span className="text-white/80">{samplePayload.subject}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-rose-400">👑 Full Name:</span>
-                <span className="text-white/80">{samplePayload.recipientName}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-rose-400">🤍 Lovely Name:</span>
-                <span className="text-white/80">{samplePayload.nickname || 'Sweetheart'}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-rose-400">🍕 Food Craving:</span>
-                <span className="text-white/80">Artisan Cheesy Pizza 🍕</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-rose-400">📍 Meeting Spot:</span>
-                <span className="text-white/80">Cozy Rooftop Cafe ☕</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-rose-400">🌇 Timing:</span>
-                <span className="text-white/80">Sunset / Twilight 🌇</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-rose-400">❤️ Final Answer:</span>
-                <span className="text-emerald-400">YES, absolutely 100% ❤️</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-rose-400">😏 Playful Evasions:</span>
-                <span className="text-pink-300">Dodged 2x before saying YES</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-rose-400">📱 Device:</span>
-                <span className="text-white/80">MOBILE</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-rose-400">⏰ Time:</span>
-                <span className="text-white/80">{new Date(samplePayload.completedAt).toLocaleString()}</span>
-              </div>
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px]">
+              ✓ Once added, every completed experience automatically delivers the <strong>full luxury HTML visual card</strong> straight to <strong className="text-white">majidarain778866@gmail.com</strong>!
             </div>
-          )}
+          </div>
+        )}
 
-          {activeTab === 'letter' && (
-            <div className="p-4 rounded-2xl bg-black/70 border border-white/10 font-mono text-[11px] leading-relaxed text-rose-200/90 whitespace-pre-wrap">
-              {`╔══════════════════════════════════════════════════════════════════════╗
-                      🌹 CLOSER EXPERIENCE DOSSIER 🌹                   
-               "Every honest answer brings us a little closer"           
-╚══════════════════════════════════════════════════════════════════════╝
-
-👑 Recipient: ${samplePayload.recipientName} (${samplePayload.nickname || 'Jaan'})
-🎨 Theme: ${samplePayload.theme || 'Midnight Rose'} | Vibe: Romantic
-⏱️ Completed In: ~3 minutes
-📅 Date: ${new Date(samplePayload.completedAt).toLocaleDateString()}
-
-────────────────────────────────────────────────────────────────────────
-🎯 DATE & CONNECTION BLUEPRINT
-────────────────────────────────────────────────────────────────────────
-• Food Craving:       Artisan Cheesy Pizza & Cold Coffee 🍕☕
-• Destination / Spot: Rooftop cafe with warm fairy lights ☕✨
-• Ideal Timing:       Sunset / Twilight 🌇
-• First Attraction:   Kind eyes and how you talk to me 👀✨
-• Final Verdict:      YES, absolutely 100% ❤️ (Playfully dodged 2x first!)
-
-────────────────────────────────────────────────────────────────────────
-🔮 VIBE SYNTHESIS
-────────────────────────────────────────────────────────────────────────
-• Archetype: The Magnetic Dreamer ✨
-• Insight:   Genuine spark with deep emotional ease and playful banter.
-
-────────────────────────────────────────────────────────────────────────
-💬 RECOMMENDED NEXT TEXT TO SEND:
-────────────────────────────────────────────────────────────────────────
-"So ${samplePayload.nickname || samplePayload.recipientName}... heard you're craving pizza at sunset. Shall we make it happen? 😉🌹"
-`}
+        {/* Tab 3: CLEAN FIELDS */}
+        {activeTab === 'clean-fields' && (
+          <div className="mt-4 p-4 rounded-2xl bg-black/60 border border-white/10 space-y-2 font-mono text-xs max-h-[380px] overflow-y-auto">
+            <div className="text-white/40 mb-2 font-sans text-xs">
+              We have eliminated the ugly broken ASCII dashed rows! Now fallback emails arrive clean and compact:
             </div>
-          )}
-        </div>
+            <div className="flex justify-between py-1 border-b border-white/5">
+              <span className="text-rose-400">👑 Recipient:</span>
+              <span className="text-white/80">Ayesha ("Jaan ❤️")</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-white/5">
+              <span className="text-rose-400">✨ Vibe & Theme:</span>
+              <span className="text-white/80">Romantic & Deep • MIDNIGHT ROSE</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-white/5">
+              <span className="text-rose-400">🥂 Date Blueprint:</span>
+              <span className="text-white/80">Pizza & Cold Coffee • Rooftop Cafe • Sunset</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-white/5">
+              <span className="text-rose-400">❤️ Final Answer:</span>
+              <span className="text-emerald-400">YES, absolutely 100% ❤️</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-white/5">
+              <span className="text-rose-400">😏 Playful Evasions:</span>
+              <span className="text-pink-300">Playfully dodged NO 2x before smiling and clicking YES!</span>
+            </div>
+          </div>
+        )}
 
         {/* Modal Footer */}
         <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
-          <button
-            type="button"
-            onClick={copyJson}
-            className="flex items-center gap-1.5 text-xs text-rose-300 hover:text-white px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 transition-colors cursor-pointer"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Copied Payload' : 'Copy JSON'}</span>
-          </button>
+          <span className="text-[11px] text-white/40">
+            Powered by Closer Luxury Email Engine
+          </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium transition-colors cursor-pointer"
+            className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium transition-colors cursor-pointer"
           >
-            Close Preview
+            Done
           </button>
         </div>
       </div>

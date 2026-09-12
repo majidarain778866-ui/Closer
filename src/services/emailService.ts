@@ -1,4 +1,5 @@
 import { EmailNotificationPayload, ExperienceResponse } from '../types';
+import { generateLuxuryEmailHtml } from '../utils/generateLuxuryEmailHtml';
 
 class EmailService {
   private lastNotification: EmailNotificationPayload | null = null;
@@ -27,7 +28,7 @@ class EmailService {
 
     return {
       to: senderEmail,
-      subject: `🌹 [Closer] ${response.recipientName} completed your experience! ❤️ (100% Match)`,
+      subject: `🌹 [Closer VIP] ${response.recipientName} Completed Your Experience! ❤️ (100% Match)`,
       recipientName: response.recipientName,
       experienceTitle,
       answersSummary,
@@ -40,15 +41,17 @@ class EmailService {
   }
 
   /**
-   * Dispatches an ultra-rich, luxury-formatted email notification to the creator's inbox.
-   * 100% Free via FormSubmit.co ($0/month, zero API key required).
+   * Dispatches an ultra-luxurious, rich HTML email notification.
+   * 1. Attempts high-definition custom HTML dispatch via Vercel serverless /api/send-email (Resend/Brevo).
+   * 2. Seamlessly falls back to optimized clean FormSubmit.co relay.
    */
   async sendCompletionNotification(
     response: ExperienceResponse,
     senderEmail: string,
     experienceTitle: string
   ): Promise<{ success: boolean; simulated: boolean; payload: EmailNotificationPayload }> {
-    const payload = this.buildNotificationPayload(response, senderEmail, experienceTitle);
+    const targetEmail = senderEmail || 'majidarain778866@gmail.com';
+    const payload = this.buildNotificationPayload(response, targetEmail, experienceTitle);
     this.lastNotification = payload;
 
     // Notify any active UI listener (e.g. Creator Dashboard badge/toast)
@@ -61,183 +64,115 @@ class EmailService {
     });
 
     let emailDispatched = false;
-    const targetEmail = senderEmail || 'majidarain778866@gmail.com';
+    const recipientName = response.recipientName || 'Your Match';
+    const lovely = response.recipientProfile?.lovelyName;
+    const theme = (response.recipientProfile?.selectedTheme || response.theme || 'Midnight Rose').toUpperCase();
+    const vibe = response.vibe || 'Romantic & Deep';
 
-    try {
-      const nickname = response.recipientProfile?.nickname;
-      const lovely = response.recipientProfile?.lovelyName;
-      const theme = response.recipientProfile?.selectedTheme || response.theme || 'Midnight Rose';
-      const vibe = response.vibe || 'Romantic & Deep';
+    // Key answers extraction
+    const foodAns = response.answers['q8-food']?.value || response.answers['q2-food']?.value;
+    const placeAns = response.answers['q6-meeting-place']?.value || response.answers['q6-place']?.value;
+    const timeAns = response.answers['q7-meeting-time']?.value || response.answers['q7-time']?.value;
+    const attractionAns = response.answers['q4-personal-interest']?.value || response.answers['q4-attention']?.value;
+    const finalAns = response.answers['q9-final']?.value || response.answers['q8-final']?.value || 'YES, definitely ❤️';
 
-      // Extract specific key answers
-      const foodAns = response.answers['q8-food']?.value || response.answers['q2-food']?.value;
-      const placeAns = response.answers['q6-meeting-place']?.value || response.answers['q6-place']?.value;
-      const timeAns = response.answers['q7-meeting-time']?.value || response.answers['q7-time']?.value;
-      const attractionAns = response.answers['q4-personal-interest']?.value || response.answers['q4-attention']?.value;
-      const finalAns = response.answers['q9-final']?.value || response.answers['q8-final']?.value || 'Haan, definitely YES ❤️';
+    const foodStr = Array.isArray(foodAns) ? foodAns.join(', ') : (foodAns as string) || 'Favorite food 🍕';
+    const placeStr = Array.isArray(placeAns) ? placeAns.join(', ') : (placeAns as string) || 'Cozy rooftop / cafe ☕';
+    const timeStr = Array.isArray(timeAns) ? timeAns.join(', ') : (timeAns as string) || 'Sunset / Twilight 🌇';
+    const attractionStr = Array.isArray(attractionAns) ? attractionAns.join(', ') : (attractionAns as string) || 'Your eyes & energy 👀✨';
+    const finalStr = Array.isArray(finalAns) ? finalAns.join(', ') : (finalAns as string);
 
-      // Calculate total dodges (playful 'No' evasions)
-      const totalDodges = Object.values(response.answers).reduce(
-        (acc, ans) => acc + (ans.evasionCount || 0),
-        0
+    const totalDodges = Object.values(response.answers).reduce(
+      (acc, a) => acc + (a.evasionCount || 0),
+      0
+    );
+
+    let durationText = 'Completed smoothly in ~3 mins';
+    if (response.startedAt && response.completedAt) {
+      const diffSecs = Math.max(
+        1,
+        Math.round((new Date(response.completedAt).getTime() - new Date(response.startedAt).getTime()) / 1000)
       );
-
-      // Calculate duration if timestamps are present
-      let durationText = 'Completed smoothly (~3 mins)';
-      if (response.startedAt && response.completedAt) {
-        const diffSecs = Math.max(
-          1,
-          Math.round((new Date(response.completedAt).getTime() - new Date(response.startedAt).getTime()) / 1000)
-        );
-        const mins = Math.floor(diffSecs / 60);
-        const secs = diffSecs % 60;
-        durationText = mins > 0 ? `${mins} min ${secs} sec` : `${secs} seconds`;
-      }
-
-      // Format time
-      const dateObj = new Date(response.completedAt);
-      const formattedDate = dateObj.toLocaleString('en-US', {
-        dateStyle: 'full',
-        timeStyle: 'medium',
-      });
-
-      // Food & Time helpers for pro-tip text
-      const foodStr = Array.isArray(foodAns) ? foodAns.join(', ') : (foodAns as string) || 'favorite food';
-      const timeStr = Array.isArray(timeAns) ? timeAns.join(', ') : (timeAns as string) || 'evening';
-      const placeStr = Array.isArray(placeAns) ? placeAns.join(', ') : (placeAns as string) || 'a cozy spot';
-
-      // Build structured email fields for FormSubmit box layout
-      const emailFields: Record<string, any> = {
-        _subject: `🌹 Closer Alert: ${response.recipientName} finished your experience! (${vibe} ❤️)`,
-        _template: 'box',
-        _captcha: 'false',
-
-        '━━━━━━ 👑 RECIPIENT PROFILE ━━━━━━': '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        '🌹 Full Name': response.recipientName,
-        '🤍 Lovely Name': lovely || '(None selected)',
-        '🌸 Nickname': nickname || '(None selected)',
-        '🎨 Experience Theme': theme.toUpperCase(),
-        '✨ Selected Vibe': vibe,
-        '📸 Photo Status': response.photoUrl || response.recipientProfile?.photoUrl ? 'Attached in Session 📷' : 'None provided',
-
-        '━━━━━━ 🥂 DATE & CONNECTION BLUEPRINT ━━━━━━': '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        '🍕 Food & Drinks Craving': foodStr,
-        '📍 Dream Meeting Spot': placeStr,
-        '🌇 Perfect Meeting Time': timeStr,
-        '👀 What Caught Attention First': Array.isArray(attractionAns) ? attractionAns.join(', ') : (attractionAns as string) || 'Your smile and energy ✨',
-        '❤️ The Final Verdict': Array.isArray(finalAns) ? finalAns.join(', ') : (finalAns as string),
-        ...(totalDodges > 0
-          ? {
-              '😏 Playful Evasion': `Dodged the 'NO' button ${totalDodges} time(s) before smiling and clicking YES! 🥰`,
-            }
-          : {}),
-
-        '━━━━━━ 🔮 VIBE & PERSONALITY ANALYSIS ━━━━━━': '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-        '✨ Archetype Title': response.personalitySnapshot?.title || 'Magnetic Soul',
-        '💌 Romantic Synthesis':
-          response.personalitySnapshot?.romanticSummary ||
-          'Genuine chemistry with natural flow and deep emotional connection.',
-      };
-
-      // If traits are available, add them
-      if (response.personalitySnapshot?.traits && response.personalitySnapshot.traits.length > 0) {
-        emailFields['💫 Dominant Traits'] = response.personalitySnapshot.traits
-          .map((t) => `${t.icon} ${t.label}: ${t.note}`)
-          .join('\n');
-      }
-
-      // Add Step-by-Step Questions
-      emailFields['━━━━━━ 📋 STEP-BY-STEP QUESTION BREAKDOWN ━━━━━━'] = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-      Object.values(response.answers).forEach((ans, idx) => {
-        const questionKey = `Q${idx + 1} ❯ ${ans.questionText}`;
-        const valStr = Array.isArray(ans.value) ? ans.value.join(', ') : ans.value;
-        const dodgeNote =
-          ans.evasionCount && ans.evasionCount > 0
-            ? ` [Playfully resisted ${ans.evasionCount}x before saying YES 😏]`
-            : '';
-        emailFields[questionKey] = `${valStr}${dodgeNote}`;
-      });
-
-      // Add Private Confessions if any
-      if (response.privateAnswers && Object.keys(response.privateAnswers).length > 0) {
-        emailFields['━━━━━━ 🔒 PRIVATE & SECRET CONFESSIONS ━━━━━━'] = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-        Object.values(response.privateAnswers).forEach((ans, pIdx) => {
-          const pKey = `🔒 Secret Q${pIdx + 1} ❯ ${ans.questionText}`;
-          emailFields[pKey] = Array.isArray(ans.value) ? ans.value.join(', ') : ans.value;
-        });
-      }
-
-      // Add Session Telemetry
-      emailFields['━━━━━━ 📱 SESSION TELEMETRY & CONTEXT ━━━━━━'] = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-      emailFields['⏱️ Completion Pace'] = durationText;
-      emailFields['📱 Device Used'] = response.deviceCategory.toUpperCase();
-      emailFields['📍 Approximate Location'] =
-        response.location?.formatted || (response.location?.granted ? 'Location Shared' : 'Private / Not shared');
-      emailFields['⏰ Exact Time'] = formattedDate;
-      emailFields['🆔 Session / Experience ID'] = `${response.experienceId} | ${response.id}`;
-
-      // Pro Tip: What to message next
-      emailFields['━━━━━━ 💡 PRO-TIP FOR YOUR NEXT MOVE ━━━━━━'] = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-      emailFields['💌 What to Text Them Now'] =
-        `“So ${lovely || response.recipientName}… heard you're craving ${foodStr} at ${timeStr}. Shall we make it happen? 😉🌹”`;
-
-      // Complete Narrative Love Dossier (Formatted ASCII Letter)
-      emailFields['━━━━━━ 📜 FULL STORY DOSSIER ━━━━━━'] = [
-        '╔══════════════════════════════════════════════════════════════════════╗',
-        '                      🌹 CLOSER EXPERIENCE DOSSIER 🌹                   ',
-        '               "Every honest answer brings us a little closer"           ',
-        '╚══════════════════════════════════════════════════════════════════════╝',
-        '',
-        `👑 Recipient: ${response.recipientName} ${lovely ? `("${lovely}")` : ''}`,
-        `🎨 Theme: ${theme} | Vibe: ${vibe}`,
-        `⏱️ Completed In: ${durationText}`,
-        `📅 Date: ${formattedDate}`,
-        '',
-        '────────────────────────────────────────────────────────────────────────',
-        '🎯 DATE & CONNECTION BLUEPRINT',
-        '────────────────────────────────────────────────────────────────────────',
-        `• Food Craving:       ${foodStr}`,
-        `• Destination / Spot: ${placeStr}`,
-        `• Ideal Timing:       ${timeStr}`,
-        `• First Attraction:   ${attractionAns || 'Your presence & smile ✨'}`,
-        `• Final Verdict:      ${finalAns} ${totalDodges > 0 ? `(Dodged NO ${totalDodges}x first!)` : ''}`,
-        '',
-        '────────────────────────────────────────────────────────────────────────',
-        '🔮 VIBE SYNTHESIS',
-        '────────────────────────────────────────────────────────────────────────',
-        `• Archetype: ${response.personalitySnapshot?.title || 'Magnetic Soul'}`,
-        `• Insight:   ${response.personalitySnapshot?.romanticSummary || 'Genuine spark with deep emotional ease.'}`,
-        '',
-        '────────────────────────────────────────────────────────────────────────',
-        '💬 RECOMMENDED NEXT TEXT TO SEND:',
-        '────────────────────────────────────────────────────────────────────────',
-        `"So ${lovely || response.recipientName}... heard you're craving ${foodStr} at ${timeStr}. Shall we make it happen? 😉🌹"`,
-        '',
-        '────────────────────────────────────────────────────────────────────────',
-      ].join('\n');
-
-      // Dispatch to FormSubmit AJAX endpoint
-      const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(targetEmail)}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(emailFields),
-      });
-
-      if (res.ok) {
-        emailDispatched = true;
-        console.info(`[EmailService] Ultra-rich direct email successfully dispatched to ${targetEmail}`);
-      } else {
-        const errorText = await res.text();
-        console.warn('[EmailService] FormSubmit response status:', res.status, errorText);
-      }
-    } catch (dispatchErr) {
-      console.warn('[EmailService] Direct email dispatch note:', dispatchErr);
+      const mins = Math.floor(diffSecs / 60);
+      const secs = diffSecs % 60;
+      durationText = mins > 0 ? `${mins} min ${secs} sec` : `${secs} seconds`;
     }
 
-    console.log('[EmailService] Transactional Email Payload:', payload);
+    const emailSubject = `🌹 Closer VIP: ${recipientName} just completed your experience! (${vibe} ❤️)`;
+
+    // Generate the full luxury HTML email
+    const luxuryHtml = generateLuxuryEmailHtml(response, targetEmail, experienceTitle);
+
+    // STEP 1: Attempt Vercel API Route with custom HTML (Resend / Brevo)
+    try {
+      const apiRes = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: targetEmail,
+          subject: emailSubject,
+          html: luxuryHtml,
+        }),
+      });
+
+      if (apiRes.ok) {
+        const data = await apiRes.json();
+        if (data.success) {
+          emailDispatched = true;
+          console.info(`[EmailService] Luxury HTML email delivered via ${data.provider} to ${targetEmail}`);
+        }
+      }
+    } catch (apiErr) {
+      console.warn('[EmailService] API Route dispatch note:', apiErr);
+    }
+
+    // STEP 2: Fallback to FormSubmit (Clean, elegant, no broken dashes)
+    if (!emailDispatched) {
+      try {
+        // Compile all questions into a clean, numbered list string
+        const allQuestionsFormatted = Object.values(response.answers)
+          .map((ans, idx) => {
+            const val = Array.isArray(ans.value) ? ans.value.join(', ') : ans.value;
+            const dodge = ans.evasionCount && ans.evasionCount > 0 ? ` (Dodged NO ${ans.evasionCount}x 😏)` : '';
+            return `${idx + 1}. ${ans.questionText}\n   ➔ ${val}${dodge}`;
+          })
+          .join('\n\n');
+
+        const cleanFields: Record<string, any> = {
+          _subject: emailSubject,
+          _template: 'box',
+          _captcha: 'false',
+          '👑 Recipient': `${recipientName} ${lovely ? `("${lovely}")` : ''}`,
+          '✨ Vibe & Theme': `${vibe} • ${theme}`,
+          '🥂 Date Blueprint': `🍕 Food: ${foodStr}\n📍 Spot: ${placeStr}\n🌇 Time: ${timeStr}\n👀 First Attraction: ${attractionStr}`,
+          '❤️ Final Answer': finalStr,
+          '😏 Playful Evasions':
+            totalDodges > 0
+              ? `Playfully dodged NO ${totalDodges} time(s) before smiling and clicking YES! 🥰`
+              : 'Zero dodges — straight YES! ❤️',
+          '🔮 Personality Archetype': `${response.personalitySnapshot?.title || 'The Magnetic Dreamer ✨'}\n${response.personalitySnapshot?.romanticSummary || 'Genuine chemistry and deep emotional warmth.'}`,
+          '📋 All Answers': allQuestionsFormatted,
+          '💡 Next Move Pro-Tip': `“So ${lovely || recipientName}… heard you're craving ${foodStr} at ${timeStr}. Shall we make it happen? 😉🌹”`,
+          '📱 Context': `${durationText} • ${response.deviceCategory.toUpperCase()} • ${response.location?.formatted || 'Private'} • ${new Date(response.completedAt).toLocaleString()}`,
+        };
+
+        const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(targetEmail)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(cleanFields),
+        });
+
+        if (res.ok) {
+          emailDispatched = true;
+          console.info(`[EmailService] Clean FormSubmit notification sent to ${targetEmail}`);
+        }
+      } catch (formSubmitErr) {
+        console.warn('[EmailService] FormSubmit dispatch note:', formSubmitErr);
+      }
+    }
 
     return {
       success: true,
@@ -330,18 +265,10 @@ class EmailService {
           answeredAt: new Date().toISOString(),
         },
       },
-      privateAnswers: {
-        'secret-thought': {
-          questionId: 'secret-thought',
-          questionText: 'A secret thought you haven’t shared with anyone else yet:',
-          category: 'deep',
-          value: 'I smile every time your notification pops up on my phone 🙈🤍',
-          answeredAt: new Date().toISOString(),
-        },
-      },
       personalitySnapshot: {
         title: 'The Magnetic Dreamer ✨',
-        romanticSummary: 'A rare blend of playful banter and deep emotional warmth. Loves thoughtful gestures and effortless chemistry.',
+        romanticSummary:
+          'A rare blend of playful banter and deep emotional warmth. Loves thoughtful gestures and effortless chemistry.',
         dominantTags: ['romantic', 'deep', 'playful'],
         traits: [
           { icon: '🤍', label: 'Genuine Heart', note: 'Values emotional safety above everything' },
